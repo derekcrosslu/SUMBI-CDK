@@ -1,0 +1,232 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Cliente {
+  codigoCliente              Int            @id @default(autoincrement())
+  nombresMadre               String?
+  apellidoMaternoMadre       String?
+  apellidoPaternoMadre       String?
+  tipoIdentificacionMadre    String?
+  nroIdentificacionMadre     String?
+  direccionMadre             String?
+  correoMadre                String?
+  telefonoMadre              String?
+  nombresPadre               String?
+  apellidoPaternoPadre       String?
+  apellidoMaternoPadre       String?
+  tipoIdentificacionPadre    String?
+  nroIdentificacionPadre     String?
+  direccionPadre             String?
+  correoPadre                String?
+  telefonoPadre              String?
+  responsableDelPago         String?
+  nombreDelBanco             String?
+  tipoDeCuenta               String?
+  numeroCta                  String?
+  ingresadoAlSistemaContable Boolean?
+  fechaDePagoPreferencial    DateTime?
+  credito                    Boolean?
+  alDiaConLosPagos           Boolean?
+  deudaTotal                 Float?
+  fechaDeBloqueo             DateTime?
+  nota                       String?
+  hijos                      Hijos[]
+  notas                      Nota[]
+  notificaciones             Notificacion[]
+  pago                       Pago[]
+}
+
+model Hijos {
+  codigoHijo          Int       @id @default(autoincrement())
+  codigoEscala        Int?
+  codigoCliente       Int
+  nombresHijo         String?
+  apellidoPaternoHijo String?
+  apellidoMaternoHijo String?
+  tipoDeDocumento     String?
+  nroDeDocumento      String?
+  fechaDeMatricula    DateTime?
+  salon               String
+  nota                String?
+  cliente             Cliente   @relation(fields: [codigoCliente], references: [codigoCliente])
+  notas               Nota[]
+  pagos               Pago[]
+}
+
+model Pago {
+  codigoPago         Int            @id @default(autoincrement())
+  codigoCliente      Int?
+  codigoHijo         Int?
+  rucEmpresa         String?
+  codigoClase        Int?
+  moneda             String?
+  fechaDeProceso     DateTime?
+  cuentaRecaudadora  String?
+  referencias        String?
+  fechaDeEmision     DateTime?
+  fechaDeVencimiento DateTime?
+  concepto           String?
+  valorMaximo        Float?
+  valorMinimo        Float?
+  descuento          Float?
+  importeDelPago     Float?
+  montoDepositado    Float?
+  pagoConfirmado     Boolean?
+  reciboEmitido      Boolean?
+  nota               String?
+  conceptos          Concepto[]
+  depositos          Deposito[]
+  notas              Nota[]
+  notificaciones     Notificacion[]
+  cliente            Cliente?       @relation(fields: [codigoCliente], references: [codigoCliente], onDelete: Restrict)
+  hijos              Hijos?         @relation(fields: [codigoHijo], references: [codigoHijo])
+  recibo             Recibo?
+}
+
+model Deposito {
+  codigoDeposito     Int     @id @default(autoincrement())
+  codigoNotificacion Int?
+  codigoPago         Int
+  codigoCliente      Int
+  codigoHijo         Int?
+  importeDelOrigen   Float
+  importeDelDeposito Float
+  importeMora        Float?
+  oficinaDePago      String?
+  tipoValor          String?
+  canalDeEntrada     String?
+  imagenDelVoucher   String?
+  depositoValidado   Boolean
+  nota               String?
+  pago               Pago    @relation(fields: [codigoPago], references: [codigoPago])
+  notas              Nota[]
+}
+
+model Recibo {
+  codigoRecibo       Int      @id @default(autoincrement())
+  codigoCliente      Int
+  codigoPago         Int      @unique
+  codigoNotificacion Int?
+  fechaDeVencimiento DateTime
+  fechaDeEmision     DateTime
+  nombreDelCliente   String
+  dni                String
+  tipoDeMoneda       String
+  observacion        String?
+  cantidad           Int
+  unidadDeMedida     String
+  descripcion        String
+  valorUnitario      Float
+  descuento          Float?
+  importeDeVenta     Float
+  icbper             Float?
+  opGravada          Float?
+  opExonerada        Float?
+  opInafecta         Float?
+  isc                Float?
+  igv                Float?
+  otrosCargos        Float?
+  otrosTributos      Float?
+  montoDeRedondeo    Float?
+  importeTotal       Float
+  nota               String?
+  notas              Nota[]
+  pago               Pago     @relation(fields: [codigoPago], references: [codigoPago])
+}
+
+model Notificacion {
+  codigoNotificacion Int           @id @default(autoincrement())
+  codigoCliente      Int
+  codigoPago         Int?
+  fechaDeEmision     DateTime
+  emisorNotificado   String
+  fechaDeRecepcion   DateTime?
+  fechaDeRespuesta   DateTime?
+  concepto           String
+  mensaje            String
+  notaInterna        String?
+  notas              Nota[]
+  cliente            Cliente       @relation(fields: [codigoCliente], references: [codigoCliente])
+  pago               Pago?         @relation(fields: [codigoPago], references: [codigoPago])
+  seguimientos       Seguimiento[]
+}
+
+model Seguimiento {
+  codigoSeguimiento  Int          @id @default(autoincrement())
+  codigoNotificacion Int
+  codigoCliente      Int
+  codigoPago         Int?
+  fechaDeEmision     DateTime
+  emisorNotificado   String
+  fechaDeRecepcion   DateTime?
+  fechaDeRespuesta   DateTime?
+  concepto           String
+  mensaje            String
+  notaInterna        String?
+  notas              Nota[]
+  notificacion       Notificacion @relation(fields: [codigoNotificacion], references: [codigoNotificacion])
+}
+
+model Concepto {
+  codigoConcepto     Int       @id @default(autoincrement())
+  codigoCliente      Int
+  codigoPago         Int?
+  codigoNotificacion Int?
+  avisoDePago        String?
+  vencimientoDePago  DateTime?
+  recordatorio1      String?
+  recordatorio2      String?
+  recordatorio3      String?
+  avisoFinal         String?
+  recibo             String?
+  nota               String?
+  pago               Pago?     @relation(fields: [codigoPago], references: [codigoPago])
+  notas              Nota[]
+}
+
+model Escala {
+  codigoEscala  Int     @id @default(autoincrement())
+  codigoCliente Int
+  A             String?
+  B             String?
+  C             String?
+  D             String?
+  exonerado     Boolean
+  nota          String?
+  notas         Nota[]
+}
+
+model Nota {
+  codigoNota         Int           @id @default(autoincrement())
+  codigoCliente      Int?
+  codigoHijo         Int?
+  codigoPago         Int?
+  codigoDeposito     Int?
+  codigoRecibo       Int?
+  codigoNotificacion Int?
+  codigoSeguimiento  Int?
+  codigoConcepto     Int?
+  codigoEscala       Int?
+  texto              String
+  cliente            Cliente?      @relation(fields: [codigoCliente], references: [codigoCliente])
+  concepto           Concepto?     @relation(fields: [codigoConcepto], references: [codigoConcepto])
+  deposito           Deposito?     @relation(fields: [codigoDeposito], references: [codigoDeposito])
+  escala             Escala?       @relation(fields: [codigoEscala], references: [codigoEscala])
+  hijos              Hijos?        @relation(fields: [codigoHijo], references: [codigoHijo])
+  notificacion       Notificacion? @relation(fields: [codigoNotificacion], references: [codigoNotificacion])
+  pago               Pago?         @relation(fields: [codigoPago], references: [codigoPago])
+  recibo             Recibo?       @relation(fields: [codigoRecibo], references: [codigoRecibo])
+  seguimiento        Seguimiento?  @relation(fields: [codigoSeguimiento], references: [codigoSeguimiento])
+}
